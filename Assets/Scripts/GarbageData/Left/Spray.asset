@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbce191e7d18aed4592b383546926afb, type: 3}
+  m_Name: Spray
+  m_EditorClassIdentifier: 
+  garbagePrefab: {fileID: 3051587407138126661, guid: 605eeb7b1f3353542af989049abc679d,
+    type: 3}
+  shapeType: 0
+  garbageName: "\u55B7\u96FE"
+  moveSpeed: 3

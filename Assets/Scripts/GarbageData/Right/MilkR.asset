@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbce191e7d18aed4592b383546926afb, type: 3}
+  m_Name: MilkR
+  m_EditorClassIdentifier: 
+  garbagePrefab: {fileID: 1003386125462791713, guid: 429d5739609168b40ad240bf23267a43,
+    type: 3}
+  shapeType: 1
+  garbageName: "\u725B\u5976\u76D2"
+  moveSpeed: 3
