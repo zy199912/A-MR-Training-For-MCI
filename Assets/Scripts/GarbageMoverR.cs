@@ -4,18 +4,18 @@ using UnityEngine;
 
 public class GarbageMoverR : MonoBehaviour
 {
-    public Transform targetPosition; // Ä¿±êÎ»ÖÃ¶ÔÓ¦µÄ Transform£¬¼´ LeftFoot µÄ Transform
-    public Transform trashCanPosition; // À¬»øÍ°µÄÎ»ÖÃ
-    public float moveSpeed; // À¬»øÒÆ¶¯ËÙ¶È
-    public GameObject highlightObject; // ¸ßÁÁÏÔÊ¾µÄ¶ÔÏó£¬¼´ Can-Highlight
-    public GarbageShapeType shapeType; // Ìí¼ÓÀ¬»øĞÎ×´ÀàĞÍ±äÁ¿
+    public Transform targetPosition; // ç›®æ ‡ä½ç½®å¯¹åº”çš„ Transformï¼Œå³ LeftFoot çš„ Transform
+    public Transform trashCanPosition; // åƒåœ¾æ¡¶çš„ä½ç½®
+    public float moveSpeed; // åƒåœ¾ç§»åŠ¨é€Ÿåº¦
+    public GameObject highlightObject; // é«˜äº®æ˜¾ç¤ºçš„å¯¹è±¡ï¼Œå³ Can-Highlight
+    public GarbageShapeType shapeType; // æ·»åŠ åƒåœ¾å½¢çŠ¶ç±»å‹å˜é‡
 
     private bool isHighlighted = false;
     private bool isMovingToTrashCan = false;
     private float parabolaTime = 0f;
     private Vector3 startPosition;
-    private float parabolaDuration = 1f; // Å×ÎïÏßÒÆ¶¯µÄ³ÖĞøÊ±¼ä
-    public float parabolaHeight = 3f; // Å×ÎïÏßµÄ¸ß¶È
+    private float parabolaDuration = 1f; // æŠ›ç‰©çº¿ç§»åŠ¨çš„æŒç»­æ—¶é—´
+    public float parabolaHeight = 3f; // æŠ›ç‰©çº¿çš„é«˜åº¦
 
     void Update()
     {
@@ -25,11 +25,11 @@ public class GarbageMoverR : MonoBehaviour
             float distance = Vector3.Distance(transform.position, targetPosition.position);
             if (distance < 0.8f && !isHighlighted)
             {
-                Debug.Log("´¥·¢ SetHighlighted ·½·¨");
+                Debug.Log("è§¦å‘ SetHighlighted æ–¹æ³•");
                 SetHighlighted();
             }
 
-            // ¸ù¾İĞÎ×´ÀàĞÍ´¦Àí°´¼üÊäÈë
+            // æ ¹æ®å½¢çŠ¶ç±»å‹å¤„ç†æŒ‰é”®è¾“å…¥
             if (isHighlighted)
             {
                 if (shapeType == GarbageShapeType.Cylinder && Input.GetKeyDown(KeyCode.UpArrow))
@@ -56,21 +56,21 @@ public class GarbageMoverR : MonoBehaviour
             highlightObject.SetActive(true);
         }
         isHighlighted = true;
-        Debug.Log("SetHighlighted ·½·¨Ö´ĞĞÍê±Ï£¬isHighlighted ÒÑÉèÖÃÎª true");
+        Debug.Log("SetHighlighted æ–¹æ³•æ‰§è¡Œå®Œæ¯•ï¼ŒisHighlighted å·²è®¾ç½®ä¸º true");
     }
 
     void StartMovingToTrashCan()
     {
         if (trashCanPosition == null)
         {
-            Debug.LogError("Ã»ÓĞÉèÖÃÀ¬»øÍ°Î»ÖÃ£¡ÇëÔÚInspectorÖĞÉèÖÃtrashCanPosition");
+            Debug.LogError("æ²¡æœ‰è®¾ç½®åƒåœ¾æ¡¶ä½ç½®ï¼è¯·åœ¨Inspectorä¸­è®¾ç½®trashCanPosition");
             return;
         }
 
         isMovingToTrashCan = true;
         startPosition = transform.position;
         parabolaTime = 0f;
-        Debug.Log($"¿ªÊ¼ÏòÀ¬»øÍ°ÒÆ¶¯£¬Ä¿±êÎ»ÖÃ: {trashCanPosition.position}");
+        Debug.Log($"å¼€å§‹å‘åƒåœ¾æ¡¶ç§»åŠ¨ï¼Œç›®æ ‡ä½ç½®: {trashCanPosition.position}");
     }
 
     void MoveToTrashCan()
@@ -83,7 +83,7 @@ public class GarbageMoverR : MonoBehaviour
             Vector3 start = startPosition;
             Vector3 end = trashCanPosition.position;
 
-            // ¼ÆËãÅ×ÎïÏßÖĞµã£¬È·±£ÔÚ¿ÕÖĞ
+            // è®¡ç®—æŠ›ç‰©çº¿ä¸­ç‚¹ï¼Œç¡®ä¿åœ¨ç©ºä¸­
             float maxY = Mathf.Max(start.y, end.y);
             Vector3 mid = new Vector3(
                 (start.x + end.x) / 2f,
@@ -91,14 +91,14 @@ public class GarbageMoverR : MonoBehaviour
                 (start.z + end.z) / 2f
             );
 
-            // ¶ş´Î±´Èû¶ûÇúÏßÊµÏÖÅ×ÎïÏß
+            // äºŒæ¬¡è´å¡å°”æ›²çº¿å®ç°æŠ›ç‰©çº¿
             Vector3 newPosition = (1 - t) * (1 - t) * start + 2 * (1 - t) * t * mid + t * t * end;
             transform.position = newPosition;
         }
         else
         {
             isMovingToTrashCan = false;
-            // µ½´ïÀ¬»øÍ°ºóÏú»ÙÀ¬»ø
+            // åˆ°è¾¾åƒåœ¾æ¡¶åé”€æ¯åƒåœ¾
             Destroy(gameObject);
         }
     }

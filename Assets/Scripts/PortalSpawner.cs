@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-    public GarbageData[] garbageDatas; // ´æ·ÅÀ¬»øÊı¾İµÄÊı×é£¬ĞèÔÚInspectorÃæ°å¸³Öµ
-    public Transform topPoint; // TopPointµÄTransform×é¼ş£¬¼´À¬»øÉú³ÉÎ»ÖÃ£¬¿ÉÔÚInspectorÃæ°åÍÏ×§¸³Öµ
-    public Transform leftFoot; // LeftFootµÄTransform×é¼ş£¬¼´À¬»øÒÆ¶¯Ä¿±êÎ»ÖÃ£¬¿ÉÔÚInspectorÃæ°åÍÏ×§¸³Öµ
-    public float detectionRadius = 1f; // ¼ì²âLeftFootÎ»ÖÃÊÇ·ñÓĞÀ¬»øµÄ°ë¾¶
+    public GarbageData[] garbageDatas; // å­˜æ”¾åƒåœ¾æ•°æ®çš„æ•°ç»„ï¼Œéœ€åœ¨Inspectoré¢æ¿èµ‹å€¼
+    public Transform topPoint; // TopPointçš„Transformç»„ä»¶ï¼Œå³åƒåœ¾ç”Ÿæˆä½ç½®ï¼Œå¯åœ¨Inspectoré¢æ¿æ‹–æ‹½èµ‹å€¼
+    public Transform leftFoot; // LeftFootçš„Transformç»„ä»¶ï¼Œå³åƒåœ¾ç§»åŠ¨ç›®æ ‡ä½ç½®ï¼Œå¯åœ¨Inspectoré¢æ¿æ‹–æ‹½èµ‹å€¼
+    public float detectionRadius = 1f; // æ£€æµ‹LeftFootä½ç½®æ˜¯å¦æœ‰åƒåœ¾çš„åŠå¾„
 
     private float timer = 0f;
-    public float spawnInterval = 3f; // Éú³É¼ä¸ôÊ±¼ä
+    public float spawnInterval = 3f; // ç”Ÿæˆé—´éš”æ—¶é—´
 
     void Update()
     {
@@ -27,7 +27,7 @@ public class NewBehaviourScript : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(leftFoot.position, detectionRadius);
         foreach (Collider collider in colliders)
         {
-            if (collider.CompareTag("Garbage")) // ¼ÙÉèÀ¬»ø¶ÔÏóµÄ±êÇ©Îª "Garbage"
+            if (collider.CompareTag("Garbage")) // å‡è®¾åƒåœ¾å¯¹è±¡çš„æ ‡ç­¾ä¸º "Garbage"
             {
                 return true;
             }
@@ -42,17 +42,17 @@ public class NewBehaviourScript : MonoBehaviour
             int randomIndex = Random.Range(0, garbageDatas.Length);
             GarbageData currentGarbageData = garbageDatas[randomIndex];
 
-            // ÊµÀı»¯À¬»øÔ¤ÖÆÌå
+            // å®ä¾‹åŒ–åƒåœ¾é¢„åˆ¶ä½“
             GameObject spawnedGarbage = Instantiate(currentGarbageData.garbagePrefab, topPoint.position, Quaternion.identity);
 
-            // ÎªÀ¬»øÌí¼ÓÒÆ¶¯½Å±¾²¢ÉèÖÃ²ÎÊı
+            // ä¸ºåƒåœ¾æ·»åŠ ç§»åŠ¨è„šæœ¬å¹¶è®¾ç½®å‚æ•°
             GarbageMover garbageMover = spawnedGarbage.AddComponent<GarbageMover>();
             garbageMover.targetPosition = leftFoot;
             garbageMover.moveSpeed = currentGarbageData.moveSpeed;
         }
         else
         {
-            Debug.LogError("garbageDatasÊı×éÎ´ÕıÈ·¸³Öµ£¬Ã»ÓĞ¿ÉÉú³ÉµÄÀ¬»øÊı¾İ£¡");
+            Debug.LogError("garbageDatasæ•°ç»„æœªæ­£ç¡®èµ‹å€¼ï¼Œæ²¡æœ‰å¯ç”Ÿæˆçš„åƒåœ¾æ•°æ®ï¼");
         }
     }
 }
