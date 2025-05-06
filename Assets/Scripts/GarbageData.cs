@@ -4,23 +4,23 @@ using UnityEngine;
 
 using UnityEngine;
 
-// å®šä¹‰åƒåœ¾å½¢çŠ¶ç±»å‹çš„æšä¸¾
+// ¶¨ÒåÀ¬»øĞÎ×´ÀàĞÍµÄÃ¶¾Ù
 public enum GarbageShapeType
 {
     Cylinder,
     Square
 }
 
-// åˆ›å»ºå¯åœ¨Unityèœå•ä¸­åˆ›å»ºçš„èµ„äº§
+// ´´½¨¿ÉÔÚUnity²Ëµ¥ÖĞ´´½¨µÄ×Ê²ú
 [CreateAssetMenu(fileName = "NewGarbageData", menuName = "Garbage Data", order = 1)]
 public class GarbageData : ScriptableObject
 {
-    // åƒåœ¾é¢„åˆ¶ä½“
+    // À¬»øÔ¤ÖÆÌå
     public GameObject garbagePrefab;
-    // åƒåœ¾æ‰€å±çš„å½¢çŠ¶ç±»å‹
+    // À¬»øËùÊôµÄĞÎ×´ÀàĞÍ
     public GarbageShapeType shapeType;
-    // åƒåœ¾åç§°
+    // À¬»øÃû³Æ
     public string garbageName;
-    // åƒåœ¾ç§»åŠ¨é€Ÿåº¦
+    // À¬»øÒÆ¶¯ËÙ¶È
     public float moveSpeed;
 }
