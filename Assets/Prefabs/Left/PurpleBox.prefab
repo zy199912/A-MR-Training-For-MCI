@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPosition: {fileID: 567784438277487394, guid: da16e35b69bc16346ab952f3487b2504,
     type: 3}
-  trashCanPosition: {fileID: 8904476584909224449, guid: 1cec1db12eefbec47b942c1f1c8fd2de,
+  trashCanPosition: {fileID: 619400701930419229, guid: 1cec1db12eefbec47b942c1f1c8fd2de,
     type: 3}
   moveSpeed: 3
   highlightObject: {fileID: 7691560172310611617}
