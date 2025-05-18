@@ -1,23 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI; 
 
-
+// ç§»é™¤é‡å¤çš„æšä¸¾å®šä¹‰
+// GarbageShapeType å·²ç»åœ¨å…¶ä»–åœ°æ–¹å®šä¹‰
 
 public class GarbageMover : MonoBehaviour
 {
-    public Transform targetPosition; // Ä¿±êÎ»ÖÃ¶ÔÓ¦µÄ Transform£¬¼´ LeftFoot µÄ Transform
-    public Transform trashCanPosition; // À¬»øÍ°µÄÎ»ÖÃ
-    public float moveSpeed; // À¬»øÒÆ¶¯ËÙ¶È
-    public GameObject highlightObject; // ¸ßÁÁÏÔÊ¾µÄ¶ÔÏó£¬¼´ Can-Highlight
-    public GarbageShapeType shapeType; // Ìí¼ÓÀ¬»øĞÎ×´ÀàĞÍ±äÁ¿
+    public Transform targetPosition;
+    public Transform trashCanPosition;
+    public float moveSpeed;
+    public GameObject highlightObject;
+    public GarbageShapeType shapeType;
 
     private bool isHighlighted = false;
     private bool isMovingToTrashCan = false;
     private float parabolaTime = 0f;
     private Vector3 startPosition;
-    private float parabolaDuration = 1f; // Å×ÎïÏßÒÆ¶¯µÄ³ÖĞøÊ±¼ä
-    public float parabolaHeight = 3f; // Å×ÎïÏßµÄ¸ß¶È
+    private float parabolaDuration = 1f;
+    public float parabolaHeight = 3f;
+
+    // æ·»åŠ è°ƒè¯•è¾“å‡ºï¼ŒæŸ¥çœ‹æ˜¯å¦æ­£ç¡®è®¢é˜…äº‹ä»¶
+    void Start()
+    {
+        Debug.Log($"GarbageMover å¯åŠ¨: å½¢çŠ¶ç±»å‹ = {shapeType}");
+        
+        // éªŒè¯ IMUEventManager æ˜¯å¦å­˜åœ¨
+        if (IMUEventManager.Instance == null)
+        {
+            Debug.LogError("IMUEventManager.Instance ä¸ºç©ºï¼Œæ— æ³•åœ¨ Start æ—¶è®¢é˜…äº‹ä»¶");
+        }
+    }
 
     void Update()
     {
@@ -27,19 +41,21 @@ public class GarbageMover : MonoBehaviour
             float distance = Vector3.Distance(transform.position, targetPosition.position);
             if (distance < 0.8f && !isHighlighted)
             {
-                Debug.Log("´¥·¢ SetHighlighted ·½·¨");
+                Debug.Log("è°ƒç”¨ SetHighlighted æ–¹æ³•");
                 SetHighlighted();
             }
 
-            // ¸ù¾İĞÎ×´ÀàĞÍ´¦Àí°´¼üÊäÈë
+            // æ ¹æ®å½¢çŠ¶ç±»å‹ä½¿ç”¨ç›¸åº”çš„æŒ‰é”®
             if (isHighlighted)
             {
-                if (shapeType == GarbageShapeType.Cylinder && Input.GetKeyDown(KeyCode.W))
+                if (shapeType == GarbageShapeType.Cylinder && IMUEventManager.GetKeyDown(KeyCode.W))
                 {
+                    Debug.Log("æ£€æµ‹åˆ° W é”®æŒ‰ä¸‹æˆ–è¸¢è…¿åŠ¨ä½œï¼Œå¼€å§‹ç§»å‘åƒåœ¾æ¡¶");
                     StartMovingToTrashCan();
                 }
-                else if (shapeType == GarbageShapeType.Square && Input.GetKeyDown(KeyCode.S))
+                else if (shapeType == GarbageShapeType.Square && IMUEventManager.GetKeyDown(KeyCode.S))
                 {
+                    Debug.Log("æ£€æµ‹åˆ° S é”®æŒ‰ä¸‹æˆ–è·ºè„šåŠ¨ä½œï¼Œé”€æ¯ç‰©ä½“");
                     Destroy(gameObject);
                 }
             }
@@ -58,21 +74,21 @@ public class GarbageMover : MonoBehaviour
             highlightObject.SetActive(true);
         }
         isHighlighted = true;
-        Debug.Log("SetHighlighted ·½·¨Ö´ĞĞÍê±Ï£¬isHighlighted ÒÑÉèÖÃÎª true");
+        Debug.Log("SetHighlighted æ–¹æ³•æ‰§è¡Œå®Œæ¯•ï¼ŒisHighlighted è®¾ç½®ä¸º true");
     }
 
     void StartMovingToTrashCan()
     {
         if (trashCanPosition == null)
         {
-            Debug.LogError("Ã»ÓĞÉèÖÃÀ¬»øÍ°Î»ÖÃ£¡ÇëÔÚInspectorÖĞÉèÖÃtrashCanPosition");
+            Debug.LogError("æ²¡æœ‰è®¾ç½®åƒåœ¾æ¡¶ä½ç½®ï¼Œè¯·åœ¨Inspectorä¸­è®¾ç½®trashCanPosition");
             return;
         }
 
         isMovingToTrashCan = true;
         startPosition = transform.position;
         parabolaTime = 0f;
-        Debug.Log($"¿ªÊ¼ÏòÀ¬»øÍ°ÒÆ¶¯£¬Ä¿±êÎ»ÖÃ: {trashCanPosition.position}");
+        Debug.Log($"å¼€å§‹å‘åƒåœ¾æ¡¶ç§»åŠ¨ï¼Œç›®æ ‡ä½ç½®: {trashCanPosition.position}");
     }
 
     void MoveToTrashCan()
@@ -85,7 +101,6 @@ public class GarbageMover : MonoBehaviour
             Vector3 start = startPosition;
             Vector3 end = trashCanPosition.position;
 
-            // ¼ÆËãÅ×ÎïÏßÖĞµã£¬È·±£ÔÚ¿ÕÖĞ
             float maxY = Mathf.Max(start.y, end.y);
             Vector3 mid = new Vector3(
                 (start.x + end.x) / 2f,
@@ -93,15 +108,83 @@ public class GarbageMover : MonoBehaviour
                 (start.z + end.z) / 2f
             );
 
-            // ¶ş´Î±´Èû¶ûÇúÏßÊµÏÖÅ×ÎïÏß
             Vector3 newPosition = (1 - t) * (1 - t) * start + 2 * (1 - t) * t * mid + t * t * end;
             transform.position = newPosition;
         }
         else
         {
             isMovingToTrashCan = false;
-            // µ½´ïÀ¬»øÍ°ºóÏú»ÙÀ¬»ø
             Destroy(gameObject);
+        }
+    }
+
+    void OnEnable()
+    {
+        Debug.Log($"GarbageMover.OnEnable è¢«è°ƒç”¨: å½¢çŠ¶ç±»å‹ = {shapeType}");
+        
+        if (IMUEventManager.Instance != null)
+        {
+            if (shapeType == GarbageShapeType.Cylinder)
+            {
+                Debug.Log("è®¢é˜…è¸¢è…¿äº‹ä»¶");
+                IMUEventManager.Instance.OnKickDetected += OnKickDetected;
+            }
+            else if (shapeType == GarbageShapeType.Square)
+            {
+                Debug.Log("è®¢é˜…è·ºè„šäº‹ä»¶");
+                IMUEventManager.Instance.OnStompDetected += OnStompDetected;
+            }
+        }
+        else
+        {
+            Debug.LogError("IMUEventManager.Instance ä¸ºç©ºï¼Œæ— æ³•åœ¨ OnEnable æ—¶è®¢é˜…äº‹ä»¶");
+        }
+    }
+
+    void OnDisable()
+    {
+        Debug.Log($"GarbageMover.OnDisable è¢«è°ƒç”¨: å½¢çŠ¶ç±»å‹ = {shapeType}");
+        
+        if (IMUEventManager.Instance != null)
+        {
+            if (shapeType == GarbageShapeType.Cylinder)
+            {
+                Debug.Log("å–æ¶ˆè®¢é˜…è¸¢è…¿äº‹ä»¶");
+                IMUEventManager.Instance.OnKickDetected -= OnKickDetected;
+            }
+            else if (shapeType == GarbageShapeType.Square)
+            {
+                Debug.Log("å–æ¶ˆè®¢é˜…è·ºè„šäº‹ä»¶");
+                IMUEventManager.Instance.OnStompDetected -= OnStompDetected;
+            }
+        }
+    }
+
+    void OnKickDetected()
+    {
+        Debug.Log("GarbageMover: OnKickDetected è¢«è°ƒç”¨");
+        if (isHighlighted && !isMovingToTrashCan)
+        {
+            Debug.Log("æ£€æµ‹åˆ°è¸¢è…¿åŠ¨ä½œï¼Œå¼€å§‹ç§»å‘åƒåœ¾æ¡¶");
+            StartMovingToTrashCan();
+        }
+        else
+        {
+            Debug.Log($"æœªå¤„ç†è¸¢è…¿äº‹ä»¶: isHighlighted={isHighlighted}, isMovingToTrashCan={isMovingToTrashCan}");
+        }
+    }
+
+    void OnStompDetected()
+    {
+        Debug.Log("GarbageMover: OnStompDetected è¢«è°ƒç”¨");
+        if (isHighlighted && !isMovingToTrashCan)
+        {
+            Debug.Log("æ£€æµ‹åˆ°è·ºè„šåŠ¨ä½œï¼Œé”€æ¯ç‰©ä½“");
+            Destroy(gameObject);
+        }
+        else
+        {
+            Debug.Log($"æœªå¤„ç†è·ºè„šäº‹ä»¶: isHighlighted={isHighlighted}, isMovingToTrashCan={isMovingToTrashCan}");
         }
     }
 }

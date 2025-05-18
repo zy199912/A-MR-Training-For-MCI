@@ -6,17 +6,14 @@ using System.Threading;
 using System.Text;
 using System.Collections;
 
-// 主线程调度器（保持原有实现）
-public class UnityMainThreadDispatcher : MonoBehaviour { /* 原有代码保持不变 */ }
-
 [System.Serializable]
 public class ActionEvent
 {
-    public string action; // "stomp" 或 "kick"
+    public string motion_type; // 修改为匹配 Python 端的字段名
     public float timestamp;
 }
 
-public class BLESimpleReceiver : MonoBehaviour
+public class BLEReceiver : MonoBehaviour
 {
     [Header("WebSocket设置")]
     public string serverUrl = "ws://localhost:8765";
@@ -32,10 +29,9 @@ public class BLESimpleReceiver : MonoBehaviour
     public event Action OnKickDetected;
 
     // WebSocket相关
-    private ClientWebSocket _webSocket;
-    private CancellationTokenSource _cts;
-    private bool _isConnected;
-    private bool _isConnecting;
+    private ClientWebSocket webSocket;
+    private CancellationTokenSource cts;
+    private bool isConnected = false;
 
     void Start()
     {
@@ -47,128 +43,249 @@ public class BLESimpleReceiver : MonoBehaviour
         Disconnect();
     }
 
-    public void ConnectToServer()
+    // 简化后的连接方法
+    public async void ConnectToServer()
     {
-        if (_isConnected || _isConnecting) return;
+        if (isConnected) return;
         
-        DebugLog("正在连接服务器...");
-        Task.Run(WebSocketConnectLoop);
-    }
-
-    private async Task WebSocketConnectLoop()
-    {
-        _isConnecting = true;
+        DebugLog("尝试连接到服务器...");
         
-        while (!_isConnected && Application.isPlaying)
-        {
-            try
-            {
-                using (_webSocket = new ClientWebSocket())
-                using (_cts = new CancellationTokenSource())
-                {
-                    await _webSocket.ConnectAsync(
-                        new Uri(serverUrl), 
-                        _cts.Token
-                    );
-
-                    _isConnected = true;
-                    DebugLog("连接成功");
-                    await WebSocketReceiveLoop();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugLog($"连接失败: {e.Message}");
-            }
-            finally
-            {
-                _isConnected = false;
-                if (Application.isPlaying)
-                {
-                    await Task.Delay((int)(reconnectInterval * 1000));
-                }
-            }
-        }
-        _isConnecting = false;
-    }
-
-    private async Task WebSocketReceiveLoop()
-    {
-        var buffer = new byte[1024];
+        // 清理旧连接（如果有）
+        Disconnect();
+        
+        webSocket = new ClientWebSocket();
+        cts = new CancellationTokenSource();
         
         try
         {
-            while (_webSocket.State == WebSocketState.Open)
-            {
-                var result = await _webSocket.ReceiveAsync(
-                    new ArraySegment<byte>(buffer), 
-                    _cts.Token
-                );
-
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await _webSocket.CloseAsync(
-                        WebSocketCloseStatus.NormalClosure, 
-                        "Close requested", 
-                        _cts.Token
-                    );
-                    break;
-                }
-
-                var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                ProcessWebSocketMessage(json);
-            }
+            await webSocket.ConnectAsync(new Uri(serverUrl), cts.Token);
+            isConnected = true;
+            DebugLog("连接成功！");
+            
+            // 开始接收消息
+            ReceiveMessages();
         }
         catch (Exception e)
         {
-            DebugLog($"接收中断: {e.Message}");
-        }
-        finally
-        {
-            Disconnect();
+            DebugLog($"连接失败: {e.Message}");
+            isConnected = false;
+            
+            // 安排重新连接
+            StartCoroutine(ReconnectAfterDelay());
         }
     }
+    
+    // 新的消息接收方法
+    private async void ReceiveMessages()
+    {
+        var buffer = new byte[4096];
+        
+        while (webSocket != null && webSocket.State == WebSocketState.Open && !cts.IsCancellationRequested)
+        {
+            try
+            {
+                var result = await webSocket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer), cts.Token);
+                
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    DebugLog("服务器关闭了连接");
+                    isConnected = false;
+                    
+                    // 重新连接
+                    StartCoroutine(ReconnectAfterDelay());
+                    break;
+                }
+                
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                DebugLog($"收到消息: {message}");
+                
+                // 处理消息
+                ProcessWebSocketMessage(message);
+            }
+            catch (Exception e)
+            {
+                DebugLog($"接收消息时出错: {e.Message}");
+                isConnected = false;
+                
+                // 连接断开，尝试重新连接
+                if (!cts.IsCancellationRequested)
+                {
+                    StartCoroutine(ReconnectAfterDelay());
+                }
+                break;
+            }
+        }
+        
+        DebugLog("消息接收循环已结束");
+    }
 
-    // 修改138行附近代码（原错误位置）
+    // 处理接收到的 WebSocket 消息
+   // 处理接收到的 WebSocket 消息
 private void ProcessWebSocketMessage(string json)
 {
     try
     {
         var eventData = JsonUtility.FromJson<ActionEvent>(json);
         
-        // 修改为使用属性访问方式
-        UnityMainThreadDispatcher.Instance.Enqueue(() => 
+        // 在调试日志中显示解析后的数据
+        DebugLog($"解析JSON结果: motion_type={eventData.motion_type}, timestamp={eventData.timestamp}");
+        
+        // 处理动作事件
+        switch (eventData.motion_type.ToLower())
         {
-            switch (eventData.action.ToLower())
-            {
-                case "stomp":
-                    OnStompDetected?.Invoke();
-                    Debug.Log($"收到跺脚事件 @{eventData.timestamp}");
-                    break;
-                    
-                case "kick":
-                    OnKickDetected?.Invoke();
-                    Debug.Log($"收到踢腿事件 @{eventData.timestamp}");
-                    break;
-            }
-        });
+            case "stomp":
+                DebugLog($"收到跺脚事件 @{eventData.timestamp}");
+                
+                // 触发自己的事件
+                OnStompDetected?.Invoke();
+                
+                // 直接调用 IMUEventManager
+                if (IMUEventManager.Instance != null)
+                {
+                    DebugLog("正在调用 IMUEventManager.TriggerStompEvent()");
+                    IMUEventManager.Instance.TriggerStompEvent();
+                }
+                else
+                {
+                    DebugLog("错误: IMUEventManager.Instance 为空，无法触发跺脚事件", true);
+                }
+                break;
+                
+            case "kick":
+                DebugLog($"收到踢腿事件 @{eventData.timestamp}");
+                
+                // 触发自己的事件
+                OnKickDetected?.Invoke();
+                
+                // 直接调用 IMUEventManager
+                if (IMUEventManager.Instance != null)
+                {
+                    DebugLog("正在调用 IMUEventManager.TriggerKickEvent()");
+                    IMUEventManager.Instance.TriggerKickEvent();
+                }
+                else
+                {
+                    DebugLog("错误: IMUEventManager.Instance 为空，无法触发踢腿事件", true);
+                }
+                break;
+                
+            default:
+                DebugLog($"未知的动作类型: {eventData.motion_type}");
+                break;
+        }
     }
     catch (Exception e)
     {
-        Debug.LogError($"消息解析失败: {e.Message}\n原始数据: {json}");
+        DebugLog($"消息解析失败: {e.Message}\n原始数据: {json}", true);
+        
+        // 尝试使用更灵活的 JSON 解析方法
+        try
+        {
+            // 使用手动解析，因为 JsonUtility 有时候会很严格
+            if (json.Contains("\"motion_type\":\"stomp\""))
+            {
+                DebugLog("手动解析检测到跺脚动作");
+                
+                // 触发自己的事件
+                OnStompDetected?.Invoke();
+                
+                // 直接调用 IMUEventManager
+                if (IMUEventManager.Instance != null)
+                {
+                    DebugLog("正在调用 IMUEventManager.TriggerStompEvent()");
+                    IMUEventManager.Instance.TriggerStompEvent();
+                }
+            }
+            else if (json.Contains("\"motion_type\":\"kick\""))
+            {
+                DebugLog("手动解析检测到踢腿动作");
+                
+                // 触发自己的事件
+                OnKickDetected?.Invoke();
+                
+                // 直接调用 IMUEventManager
+                if (IMUEventManager.Instance != null)
+                {
+                    DebugLog("正在调用 IMUEventManager.TriggerKickEvent()");
+                    IMUEventManager.Instance.TriggerKickEvent();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLog($"手动解析也失败: {ex.Message}", true);
+        }
     }
 }
 
+// 修改 DebugLog 方法以支持错误日志
+private void DebugLog(string message, bool isError = false)
+{
+    if (!debugLog) return;
+    
+    if (isError)
+        Debug.LogError($"[BLEReceiver] {message}");
+    else
+        Debug.Log($"[BLEReceiver] {message}");
+}
+
+    // 重连逻辑
+    private IEnumerator ReconnectAfterDelay()
+    {
+        DebugLog($"将在 {reconnectInterval} 秒后重新连接...");
+        yield return new WaitForSeconds(reconnectInterval);
+        ConnectToServer();
+    }
+
+    // 断开连接
     public void Disconnect()
     {
-        _isConnected = false;
-        _cts?.Cancel();
+        if (cts != null)
+        {
+            cts.Cancel();
+            cts.Dispose();
+            cts = null;
+        }
+        
+        if (webSocket != null)
+        {
+            if (webSocket.State == WebSocketState.Open)
+            {
+                try
+                {
+                    // 尝试优雅地关闭
+                    var closeTask = webSocket.CloseAsync(
+                        WebSocketCloseStatus.NormalClosure,
+                        "Client disconnecting",
+                        CancellationToken.None);
+                    
+                    // 等待关闭完成，但设置超时
+                    var completedTask = Task.WaitAny(new Task[] { closeTask }, 1000);
+                    if (completedTask == -1)
+                    {
+                        DebugLog("关闭连接超时");
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugLog($"关闭连接时出错: {e.Message}");
+                }
+            }
+            
+            webSocket.Dispose();
+            webSocket = null;
+        }
+        
+        isConnected = false;
         DebugLog("连接已关闭");
     }
 
+    // 记录调试信息
     private void DebugLog(string message)
     {
-        if (debugLog) Debug.Log($"[BLEReceiver] {message}");
+        if (debugLog) 
+            Debug.Log($"[BLEReceiver] {message}");
     }
 
     #if UNITY_EDITOR
@@ -193,13 +310,22 @@ private void ProcessWebSocketMessage(string json)
         GUIStyle style = new GUIStyle(GUI.skin.label)
         {
             fontSize = 24,
-            normal = { textColor = _isConnected ? Color.green : Color.red }
+            normal = { textColor = isConnected ? Color.green : Color.red }
         };
 
         GUI.Label(
             new Rect(20, 20, 400, 50), 
-            _isConnected ? "已连接" : "未连接", 
+            isConnected ? "已连接" : "未连接", 
             style
         );
+        
+        // 添加手动重连按钮
+        if (!isConnected)
+        {
+            if (GUI.Button(new Rect(20, 70, 150, 40), "重新连接"))
+            {
+                ConnectToServer();
+            }
+        }
     }
 }
